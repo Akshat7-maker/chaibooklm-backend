@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ResourceType {
+  PDF
+  YOUTUBE
+  WEBSITE
+  VTT
+  DOCX
+  TXT
+  AUDIO
+}
+
+enum ResourceStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+
+  notebooks Notebook[]
+  refreshTokens RefreshToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notebook {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resources     Resource[]
+  conversations Conversation[]
+  summaries     Summary[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Resource {
+  id String @id @default(cuid())
+
+  notebookId String
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+
+  title String
+
+  type ResourceType
+
+  status ResourceStatus @default(UPLOADING)
+
+  // Upload info
+  originalUrl String?
+  storagePath String?
+  mimeType    String?
+  fileSize    Int?
+  language    String?
+
+  // Processing info
+  progress     Int     @default(0)
+  currentStep  String?
+  errorMessage String?
+  indexedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([notebookId])
+  @@index([status])
+}
+
+model Conversation {
+  id String @id @default(cuid())
+
+  notebookId String
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+
+  title String?
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([notebookId])
+}
+
+model Message {
+  id String @id @default(cuid())
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role MessageRole
+
+  content String @db.Text
+
+  // References returned from Qdrant
+  citations Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+}
+
+model Summary {
+  id String @id @default(cuid())
+
+  notebookId String
+  notebook   Notebook @relation(fields: [notebookId], references: [id], onDelete: Cascade)
+
+  title String
+
+  content String @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([notebookId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
