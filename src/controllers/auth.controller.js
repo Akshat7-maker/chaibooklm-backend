@@ -10,7 +10,7 @@ import { registerSchema, loginSchema } from "../validators/auth.validator.js";
 const isProd = process.env.NODE_ENV === "production";
 
 const REFRESH_COOKIE_OPTIONS = {
-  httpOnly: false,
+  httpOnly: isProd ? true : false,
   secure: isProd,
   sameSite: "lax",
   path: "/", // only sent to auth routes, not every request
