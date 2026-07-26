@@ -3,6 +3,7 @@ import { config } from "./config/index.js";
 import { initSocketServer } from "./sockets/server.js";
 import { db_connect } from "./utils/db.js";
 import http from "http";
+import "./worker.js";
 db_connect()
   .then(() => {
     const httpServer = http.createServer(app);
