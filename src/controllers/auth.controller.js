@@ -12,8 +12,8 @@ const isProd = process.env.NODE_ENV === "production";
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: isProd ? true : false,
   secure: isProd,
-  sameSite: "none",
-  Partitioned: true,
+  sameSite: isProd ? "none" : "lax",
+  ...(isProd ? { Partitioned: true } : {}),
   path: "/", // only sent to auth routes, not every request
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };

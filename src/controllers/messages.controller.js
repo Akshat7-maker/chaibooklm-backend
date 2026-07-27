@@ -47,6 +47,7 @@ export async function Chat(req, res) {
       conversationId,
       message: userMessage,
     });
+
     res.status(202).json({ status: "accepted" });
 
     generateAssistantReply({
@@ -75,6 +76,10 @@ async function generateAssistantReply({
       orderBy: { createdAt: "desc" },
       take: 6,
     });
+
+    emitToNotebook(notebookId, "stream:started", {
+      started:true
+    })
 
     const result = await generateAnswer({
       question,
